@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FortinetDashboard - How Data Flows</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            padding: 30px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+
+        /* Section */
+        .section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .icon {
+            font-size: 24px;
+        }
+
+        /* Sources Row */
+        .sources {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .source-box {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .source-box .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .source-box h3 {
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .source-box p {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .source-box.fortinet { border-color: #e74c3c; background: #fdf2f2; }
+        .source-box.versa { border-color: #27ae60; background: #f2fdf5; }
+        .source-box.netbox { border-color: #3498db; background: #f2f8fd; }
+        .source-box.database { border-color: #9b59b6; background: #f9f2fd; }
+
+        /* Arrow */
+        .arrow-section {
+            text-align: center;
+            padding: 15px 0;
+        }
+
+        .arrow-down {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            color: #95a5a6;
+        }
+
+        .arrow-down .line {
+            width: 3px;
+            height: 30px;
+            background: #bdc3c7;
+        }
+
+        .arrow-down .label {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+
+        .arrow-down .point {
+            font-size: 20px;
+        }
+
+        /* Process Box */
+        .process-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border-radius: 50px;
+            padding: 20px 40px;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .process-box h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .process-box p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        /* Flow Steps */
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .flow-step {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #bdc3c7;
+            font-size: 20px;
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .flow-step .step-num {
+            background: #667eea;
+            color: #fff;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .flow-step h4 {
+            font-size: 13px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .flow-step p {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+
+        /* Results */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .result-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .result-card .label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .result-card.green .value { color: #27ae60; }
+        .result-card.red .value { color: #e74c3c; }
+        .result-card.blue .value { color: #3498db; }
+
+        /* Output */
+        .output-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #fff;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .output-box h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .output-features {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .output-feature {
+            text-align: center;
+        }
+
+        .output-feature .icon {
+            font-size: 30px;
+            margin-bottom: 5px;
+        }
+
+        .output-feature p {
+            font-size: 12px;
+        }
+
+        /* Simple explanation */
+        .explanation {
+            background: #fffbeb;
+            border: 1px solid #f0e6c0;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-top: 20px;
+        }
+
+        .explanation h4 {
+            color: #92400e;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .explanation p {
+            color: #78350f;
+            font-size: 13px;
+        }
+
+        /* Data labels on arrows */
+        .data-flow-row {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+        }
+
+        .data-label {
+            background: #e8f4f8;
+            border: 1px solid #b8dde8;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 11px;
+            color: #2980b9;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .legend-item .shape {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-item .shape.source { background: #e0e0e0; border: 2px solid #bbb; }
+        .legend-item .shape.process { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; }
+        .legend-item .shape.output { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>How FortinetDashboard Works</h1>
+        <p class="subtitle">A simple guide to how security data flows through the system</p>
+
+        <!-- STEP 1: Data Sources -->
+        <div class="section">
+            <div class="section-title">
+                <span class="icon">📥</span>
+                Step 1: Where Data Comes From
+            </div>
+            <div class="sources">
+                <div class="source-box fortinet">
+                    <div class="icon">🔥</div>
+                    <h3>Fortinet Firewalls</h3>
+                    <p>78 security devices protecting the network</p>
+                </div>
+                <div class="source-box versa">
+                    <div class="icon">🌐</div>
+                    <h3>Versa SD-WAN</h3>
+                    <p>97 network devices connecting offices</p>
+                </div>
+                <div class="source-box netbox">
+                    <div class="icon">📦</div>
+                    <h3>NetBox Inventory</h3>
+                    <p>50 physical locations with device records</p>
+                </div>
+                <div class="source-box database">
+                    <div class="icon">👥</div>
+                    <h3>User Database</h3>
+                    <p>Staff accounts and activity logs</p>
+                </div>
+            </div>
+            <div class="explanation">
+                <h4>💡 In Simple Terms:</h4>
+                <p>The system collects information from 4 different places - firewalls, network devices, an inventory system, and a user database.</p>
+            </div>
+        </div>
+
+        <!-- Arrow with data labels -->
+        <div class="arrow-section">
+            <div class="data-flow-row">
+                <span class="data-label">Device Names</span>
+                <span class="data-label">Serial Numbers</span>
+                <span class="data-label">Online/Offline Status</span>
+                <span class="data-label">Location Info</span>
+            </div>
+            <div class="arrow-down">
+                <span class="line"></span>
+                <span class="label">Data flows down</span>
+                <span class="point">▼</span>
+            </div>
+        </div>
+
+        <!-- STEP 2: Processing -->
+        <div class="section">
+            <div class="section-title">
+                <span class="icon">⚙️</span>
+                Step 2: What Happens to the Data
+            </div>
+            <div class="process-box">
+                <h3>Site Comparison Engine</h3>
+                <p>The brain that matches devices to their physical locations</p>
+            </div>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="step-num">1</div>
+                    <h4>Collect</h4>
+                    <p>Gather data from all 4 sources at once</p>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">2</div>
+                    <h4>Organize</h4>
+                    <p>Create a list linking serial numbers to locations</p>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">3</div>
+                    <h4>Match</h4>
+                    <p>Find which device belongs to which police station</p>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num">4</div>
+                    <h4>Report</h4>
+                    <p>Show results with matched and unmatched devices</p>
+                </div>
+            </div>
+            <div class="explanation">
+                <h4>💡 In Simple Terms:</h4>
+                <p>The system takes all the device information, looks up each device's serial number, and figures out which police station or office it belongs to.</p>
+            </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="arrow-section">
+            <div class="arrow-down">
+                <span class="line"></span>
+                <span class="label">Results ready</span>
+                <span class="point">▼</span>
+            </div>
+        </div>
+
+        <!-- STEP 3: Results -->
+        <div class="section">
+            <div class="section-title">
+                <span class="icon">📊</span>
+                Step 3: What We Learn
+            </div>
+            <div class="results-grid">
+                <div class="result-card blue">
+                    <div class="value">175</div>
+                    <div class="label">Total Devices Found</div>
+                </div>
+                <div class="result-card green">
+                    <div class="value">78</div>
+                    <div class="label">Devices Matched to Locations</div>
+                </div>
+                <div class="result-card red">
+                    <div class="value">97</div>
+                    <div class="label">Devices Missing from Records</div>
+                </div>
+                <div class="result-card">
+                    <div class="value">114</div>
+                    <div class="label">Devices Currently Online</div>
+                </div>
+            </div>
+            <div class="explanation">
+                <h4>💡 In Simple Terms:</h4>
+                <p>We found 175 devices total. 78 of them are properly documented in our inventory. 97 devices need to be added to our records. 114 devices are working right now.</p>
+            </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="arrow-section">
+            <div class="arrow-down">
+                <span class="line"></span>
+                <span class="label">Displayed on screen</span>
+                <span class="point">▼</span>
+            </div>
+        </div>
+
+        <!-- STEP 4: Output -->
+        <div class="section">
+            <div class="section-title">
+                <span class="icon">🖥️</span>
+                Step 4: What Staff See
+            </div>
+            <div class="output-box">
+                <h3>Security Dashboard</h3>
+                <p>A live view of all network security in one place</p>
+                <div class="output-features">
+                    <div class="output-feature">
+                        <div class="icon">📍</div>
+                        <p>Device Locations</p>
+                    </div>
+                    <div class="output-feature">
+                        <div class="icon">✅</div>
+                        <p>Online Status</p>
+                    </div>
+                    <div class="output-feature">
+                        <div class="icon">⚠️</div>
+                        <p>Alerts</p>
+                    </div>
+                    <div class="output-feature">
+                        <div class="icon">🛡️</div>
+                        <p>Threats Blocked</p>
+                    </div>
+                    <div class="output-feature">
+                        <div class="icon">📄</div>
+                        <p>Reports</p>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation">
+                <h4>💡 In Simple Terms:</h4>
+                <p>Security staff see a simple screen showing all devices, which ones are working, any problems detected, and threats that were stopped.</p>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="shape source"></div>
+                <span>Data Source</span>
+            </div>
+            <div class="legend-item">
+                <div class="shape process"></div>
+                <span>Processing Step</span>
+            </div>
+            <div class="legend-item">
+                <div class="shape output"></div>
+                <span>Final Output</span>
+            </div>
+        </div>
+
+        <p style="text-align: center; margin-top: 30px; color: #95a5a6; font-size: 13px;">
+            FortinetDashboard - Enterprise Security Operations Center
+        </p>
+    </div>
+</body>
+</html>
